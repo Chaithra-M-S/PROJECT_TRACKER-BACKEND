@@ -2,17 +2,17 @@ import express from "express";
 import {
   createProject,
   getProjects,
-  getAdmins,
-  getAvailableAdmins
+  updateProject,
+  deleteProject
 } from "../controllers/ProjectController.js";
 
 const router = express.Router();
 
 router.post("/create", createProject);
 router.get("/", getProjects);
+router.put("/:id", updateProject);
+router.delete("/:id", deleteProject);
 
 
-router.get("/admins", getAdmins);
-router.get("/available-admins", getAvailableAdmins);
 
 export default router;

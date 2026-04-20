@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ["SUPERADMIN", "ADMIN", "PD", "MANAGER", "LEAD", "EMPLOYEE"],
     default: "EMPLOYEE"
+  },
+  project: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Project"
   }
 }, { timestamps: true });
 

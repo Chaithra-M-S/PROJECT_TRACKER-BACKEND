@@ -4,15 +4,15 @@ import User from "../models/User.js";
 // ✅ Create Project
 export const createProject = async (req, res) => {
   try {
-    const { name, description, assignedAdmin } = req.body;
+    const { name, description } = req.body;
+    console.log("BACKEND BODY:", req.body);
 
     const project = new Project({
       name,
-      description,
-      assignedAdmin
+      description
     });
-
     await project.save();
+
 
     res.status(201).json({
       message: "Project created successfully",
@@ -24,49 +24,37 @@ export const createProject = async (req, res) => {
   }
 };
 
-// ✅ Get All Projects (with Admin Name)
+
 export const getProjects = async (req, res) => {
   try {
-    const projects = await Project.find()
-      .populate("assignedAdmin", "name email");
-
-    res.json(projects);
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// ✅ Get Only ADMIN users (for dropdown)
-export const getAdmins = async (req, res) => {
-  try {
-    const admins = await User.find({ role: "ADMIN" })
-      .select("name email");
-
-    res.json(admins);
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-export const getAvailableAdmins = async (req, res) => {
-  try {
-    // 1. Get all projects
     const projects = await Project.find();
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
-    // 2. Extract assigned admin IDs
-    const assignedAdminIds = projects.map(p => p.assignedAdmin);
+// UPDATE
+export const updateProject = async (req, res) => {
+  try {
+    const updated = await Project.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
 
-    // 3. Find admins NOT already assigned
-    const availableAdmins = await User.find({
-      role: "ADMIN",
-      _id: { $nin: assignedAdminIds }
-    }).select("name email");
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
-    res.json(availableAdmins);
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+// DELETE
+export const deleteProject = async (req, res) => {
+  try {
+    await Project.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
