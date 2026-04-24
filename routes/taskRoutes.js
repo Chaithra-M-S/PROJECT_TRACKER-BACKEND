@@ -8,7 +8,10 @@ import {
 const router = express.Router();
 
 router.post("/", createTask);
+
+
 router.get("/", getTasks);
 router.put("/:id", updateTaskStatus);
+
 
 export default router;

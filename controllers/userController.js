@@ -11,8 +11,8 @@ import Project from "../models/Project.js";
 export const createUser = async (req, res) => {
   try {
     console.log("🔥 BODY FROM FRONTEND:", req.body);
-    const { name, email, password, role } = req.body;
 
+    const { name, email, password, role, createdBy } = req.body;
 
     // check existing
     const existing = await User.findOne({ email });
@@ -23,20 +23,19 @@ export const createUser = async (req, res) => {
     // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // ✅ FIX HERE (ADD project)
+    const adminProject = req.user.project; // from token
+
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      role
+      role,
+      project: adminProject   // 🔥 AUTO ASSIGN
     });
 
-
-
     const message = accountCreatedTemplate(name, email, password);
-
-
     await sendEmail(email, "Login Credentials", message);
-
 
     res.status(201).json({
       message: "User created successfully",
@@ -107,24 +106,29 @@ export const changePassword = async (req, res) => {
 };
 
 
-
 export const getManagers = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    // 🚫 prevent crash
-    if (!projectId || projectId === "undefined") {
-      return res.status(400).json({ message: "Invalid projectId" });
-    }
-
-    const managers = await User.find({
-      role: "MANAGER",
+    // Find admin of selected project
+    const admin = await User.findOne({
+      role: "ADMIN",
       project: projectId
     });
 
+    if (!admin) {
+      return res.json([]);
+    }
+
+    // Find managers created by that admin
+    const managers = await User.find({
+      role: "MANAGER",
+      createdBy: admin._id
+    });
+
     res.json(managers);
+
   } catch (err) {
-    console.error("GET MANAGERS ERROR:", err);
-    res.status(500).json({ message: "Error fetching managers" });
+    res.status(500).json({ message: err.message });
   }
 };

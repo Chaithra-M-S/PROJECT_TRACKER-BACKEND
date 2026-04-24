@@ -1,10 +1,16 @@
 import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema({
-  project: String,
+  project: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Project"
+  },
   taskName: String,
   description: String,
-  manager: String,
+  manager: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  },
   deadline: Date,
   priority: String,
   status: {
