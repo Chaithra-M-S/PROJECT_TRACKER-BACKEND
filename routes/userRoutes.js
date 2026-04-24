@@ -6,7 +6,7 @@ import { createUser, getUsers, deleteUser, changePassword, getManagers } from ".
 
 const router = express.Router();
 
-router.post("/", createUser);
+router.post("/", verifyToken, createUser);
 
 router.get("/getUser", getUsers);
 

@@ -12,34 +12,54 @@ export const createUser = async (req, res) => {
   try {
     console.log("🔥 BODY FROM FRONTEND:", req.body);
 
-    const { name, email, password, role, createdBy } = req.body;
+    const { name, email, password, role, project } = req.body;
 
-    // check existing
     const existing = await User.findOne({ email });
+
     if (existing) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ FIX HERE (ADD project)
-    const adminProject = req.user.project; // from token
+    let assignedProject = null;
+
+    // If project sent from frontend, use it
+    if (project) {
+      assignedProject = project;
+    }
+
+    // If logged-in admin has project, auto assign
+    else if (req.user && req.user.project) {
+      assignedProject = req.user.project;
+    }
+
+    // Validation
+    if (
+      role !== "PD" &&
+      role !== "SUPERADMIN" &&
+      !assignedProject
+    ) {
+      return res.status(400).json({
+        message: "Project required for this role",
+      });
+    }
 
     const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role,
-      project: adminProject   // 🔥 AUTO ASSIGN
-    });
+  name,
+  email,
+  password: hashedPassword,
+  role,
+  project: assignedProject,
+  createdBy: req.user?.id || null
+});
 
     const message = accountCreatedTemplate(name, email, password);
     await sendEmail(email, "Login Credentials", message);
 
     res.status(201).json({
       message: "User created successfully",
-      user
+      user,
     });
 
   } catch (err) {
@@ -110,20 +130,9 @@ export const getManagers = async (req, res) => {
   try {
     const { projectId } = req.params;
 
-    // Find admin of selected project
-    const admin = await User.findOne({
-      role: "ADMIN",
-      project: projectId
-    });
-
-    if (!admin) {
-      return res.json([]);
-    }
-
-    // Find managers created by that admin
     const managers = await User.find({
       role: "MANAGER",
-      createdBy: admin._id
+      project: projectId
     });
 
     res.json(managers);

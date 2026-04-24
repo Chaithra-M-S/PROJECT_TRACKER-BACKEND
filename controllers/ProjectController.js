@@ -58,3 +58,20 @@ export const deleteProject = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+export const getMyProject = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate("project");
+
+    if (!user || !user.project) {
+      return res.status(404).json({
+        message: "No project assigned"
+      });
+    }
+
+    res.json(user.project);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

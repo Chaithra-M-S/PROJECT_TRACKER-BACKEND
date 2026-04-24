@@ -7,7 +7,7 @@ import projectRoutes from "./routes/projectRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import mongoose from "mongoose";
 import swaggerUi from "swagger-ui-express";
-import swaggerFile from "./swagger-output.json" assert { type: "json" }
+import swaggerFile from "./swagger-output.json" with { type: "json" }
 
 
 dotenv.config();

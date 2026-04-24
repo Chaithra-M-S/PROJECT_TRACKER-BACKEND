@@ -21,26 +21,24 @@ export const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role
+      role,
     });
 
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-
 // LOGIN
 export const login = async (req, res) => {
   console.log("HEADERS:", req.headers);
-console.log("BODY:", req.body);
+  console.log("BODY:", req.body);
   try {
     const { email, password } = req.body;
 
@@ -59,18 +57,21 @@ console.log("BODY:", req.body);
 
     // Generate token
     const token = jwt.sign(
-      { id: user._id,
-         role: user.role },
+      { id: user._id, role: user.role, project: user.project },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "1d" },
     );
 
     res.json({
       token,
-      role: user.role,
-      name: user.name
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        project: user.project,
+      },
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
