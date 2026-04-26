@@ -46,13 +46,13 @@ export const createUser = async (req, res) => {
     }
 
     const user = await User.create({
-  name,
-  email,
-  password: hashedPassword,
-  role,
-  project: assignedProject,
-  createdBy: req.user?.id || null
-});
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      project: assignedProject,
+      createdBy: req.user?.id || null
+    });
 
     const message = accountCreatedTemplate(name, email, password);
     await sendEmail(email, "Login Credentials", message);
@@ -82,6 +82,7 @@ export const getUsers = async (req, res) => {
     // ✅ Admin → only employees/managers
     else if (req.user.role === "ADMIN") {
       users = await User.find({
+        project: req.user.project,
         role: { $in: ["EMPLOYEE", "MANAGER"] }
       }).select("-password");
     }
@@ -141,3 +142,24 @@ export const getManagers = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+// get all users under that project (for manager dropdown in task creation)
+
+
+
+export const getUsersByProject = async (req, res) => {
+  try {
+    const users = await User.find({
+      project: req.params.projectId,
+      role: "EMPLOYEE"
+    });
+
+    res.json(users);
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+};
+

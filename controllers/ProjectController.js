@@ -4,12 +4,13 @@ import User from "../models/User.js";
 // ✅ Create Project
 export const createProject = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, manager } = req.body;
     console.log("BACKEND BODY:", req.body);
 
     const project = new Project({
       name,
-      description
+      description,
+      manager
     });
     await project.save();
 
@@ -70,6 +71,19 @@ export const getMyProject = async (req, res) => {
     }
 
     res.json(user.project);
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getManagerProjects = async (req, res) => {
+  try {
+    const projects = await Project.find({
+      manager: req.user.id
+    }).populate("manager", "name email");
+
+    res.json(projects);
 
   } catch (err) {
     res.status(500).json({ message: err.message });

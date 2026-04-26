@@ -5,7 +5,8 @@ import {
   getProjects,
   updateProject,
   deleteProject,
-  getMyProject
+  getMyProject,
+  getManagerProjects
 } from "../controllers/ProjectController.js";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.get("/", getProjects);
 router.put("/:id", updateProject);
 router.delete("/:id", deleteProject);
 router.get("/my-project", verifyToken, getMyProject);
+router.get("/manager-projects", verifyToken, getManagerProjects);
 
 
 

@@ -10,8 +10,11 @@ const projectSchema = new mongoose.Schema(
     description: {
       type: String
     },
+    manager: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
 
-    
     status: {
       type: String,
       enum: ["Active", "Completed"],
