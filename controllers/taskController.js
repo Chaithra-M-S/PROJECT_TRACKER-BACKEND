@@ -20,8 +20,6 @@ import Task from "../models/Tasks.js";
 //   }
 // };
 
-
-
 export const createTask = async (req, res) => {
   try {
     const {
@@ -33,7 +31,7 @@ export const createTask = async (req, res) => {
       deadline,
       priority,
       parentTask,
-      isSubtask
+      isSubtask,
     } = req.body;
 
     const task = await Task.create({
@@ -51,51 +49,58 @@ export const createTask = async (req, res) => {
       isSubtask: isSubtask || false,
 
       status: "Not Started",
-      remarks: ""
+      remarks: "",
     });
 
     res.status(201).json(task);
-
   } catch (error) {
     console.log("CREATE TASK ERROR:", error);
     res.status(500).json({
-      message: error.message
+      message: error.message,
     });
   }
 };
 
 // GET ALL
 
+
 export const getTasks = async (req, res) => {
   try {
     const user = req.user;
-
     let tasks = [];
+
+    console.log("LOGGED USER:", user);
 
     if (user.role === "PD") {
       tasks = await Task.find({
         manager: user.id,
         isSubtask: false
       });
-    }
 
-    else if (user.role === "MANAGER") {
+    } else if (user.role === "MANAGER") {
       tasks = await Task.find({
         manager: user.id,
         isSubtask: false
       });
-    }
 
-    else if (user.role === "EMPLOYEE") {
+    } else if (user.role === "EMPLOYEE") {
+
       tasks = await Task.find({
         assignedTo: user.id
-      });
+      })
+        .populate("project", "name")
+        .populate("manager", "name")
+        .populate("parentTask", "taskName")
+        .sort({ createdAt: -1 });
     }
 
     res.json(tasks);
 
   } catch (err) {
-    res.status(500).json(err);
+    console.log("GET TASK ERROR:", err);
+    res.status(500).json({
+      message: err.message
+    });
   }
 };
 
@@ -154,18 +159,16 @@ export const getManagerTasks = async (req, res) => {
     const managerId = req.user.id; // 🔥 from token
     console.log("Logged In User:", req.user);
     const tasks = await Task.find({
-      manager: managerId
+      manager: managerId,
     })
       .populate("project", "name")
       .populate("manager", "name");
 
     res.status(200).json(tasks);
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 // UPDATE STATUS (Manager)
 export const updateTaskStatus = async (req, res) => {
@@ -176,14 +179,13 @@ export const updateTaskStatus = async (req, res) => {
         $set: {
           status: req.body.status,
           remarks: req.body.remarks,
-          assignedTo: req.body.assignedTo
-        }
+          assignedTo: req.body.assignedTo,
+        },
       },
-      { new: true }
+      { new: true },
     );
 
     res.json(updatedTask);
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -192,14 +194,23 @@ export const updateTaskStatus = async (req, res) => {
 export const getTaskById = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
-      .populate("project")
-      .populate("manager");
+      .populate("project", "name")
+      .populate("manager", "name");
 
-    res.json(task);
+    const subtasks = await Task.find({
+      parentTask: req.params.id,
+      isSubtask: true
+    })
+      .populate("assignedTo", "name")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      ...task._doc,
+      subtasks
+    });
 
   } catch (error) {
     console.log(error);
     res.status(500).json(error);
   }
 };
-
