@@ -62,31 +62,85 @@ export const createTask = async (req, res) => {
 };
 
 // GET ALL
+// export const getTasks = async (req, res) => {
+//   try {
+//     const user = req.user;
+//     let tasks = [];
 
+//     console.log("Logged In User:", user);
+
+//     // PD
+//     if (user.role === "PD") {
+//       tasks = await Task.find({
+//         manager: user.id,
+//         isSubtask: false
+//       });
+//     }
+
+//     // MANAGER
+//     else if (user.role === "MANAGER") {
+//       tasks = await Task.find({
+//         project: user.project,
+//         isSubtask: false
+//       });
+//     }
+
+//     // EMPLOYEE
+//     else if (user.role === "EMPLOYEE") {
+//       tasks = await Task.find({
+//         assignedTo: { $in: [user.id] }
+//       }).populate("parentTask", "taskName");
+//     }
+
+//     res.json(tasks);
+
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json(err);
+//   }
+// };
 
 export const getTasks = async (req, res) => {
   try {
     const user = req.user;
     let tasks = [];
 
-    console.log("LOGGED USER:", user);
+    console.log("Logged In User:", user);
 
+    // ========================
+    // PROJECT DIRECTOR
+    // ========================
     if (user.role === "PD") {
       tasks = await Task.find({
-        manager: user.id,
         isSubtask: false
-      });
+      })
+        .populate("project", "name")
+        .populate("manager", "name")
+        .sort({ createdAt: -1 });
+    }
 
-    } else if (user.role === "MANAGER") {
+    // ========================
+    // MANAGER
+    // ========================
+    else if (user.role === "MANAGER") {
       tasks = await Task.find({
         manager: user.id,
-        isSubtask: false
-      });
+        $or: [
+          { isSubtask: false },
+          { isSubtask: { $exists: false } }
+        ]
+      })
+        .populate("project", "name")
+        .populate("manager", "name")
+        .sort({ createdAt: -1 });
+    }
 
-    } else if (user.role === "EMPLOYEE") {
-
+    // ========================
+    // EMPLOYEE
+    // ========================
+    else if (user.role === "EMPLOYEE") {
       tasks = await Task.find({
-        assignedTo: user.id
+        assignedTo: { $in: [user.id] }
       })
         .populate("project", "name")
         .populate("manager", "name")
@@ -98,58 +152,55 @@ export const getTasks = async (req, res) => {
 
   } catch (err) {
     console.log("GET TASK ERROR:", err);
-    res.status(500).json({
-      message: err.message
-    });
+    res.status(500).json({ message: err.message });
   }
 };
 
 // export const getTasks = async (req, res) => {
 //   try {
+//     const user = req.user;
 //     let tasks = [];
 
-//     // ADMIN
-//     if (req.user.role === "ADMIN") {
-//       tasks = await Task.find({
-//         project: req.user.project
-//       })
-//         .populate("manager", "name")
-//         .populate("project", "name")
-//         .populate("assignedTo", "name");
-//     }
+//     console.log("LOGGED USER:", user);
 
-//     // MANAGER
-//     else if (req.user.role === "MANAGER") {
+//     if (user.role === "PD") {
 //       tasks = await Task.find({
-//         manager: req.user.id
+//         manager: user.id,
+//         isSubtask: false
 //       })
-//         .populate("manager", "name")
 //         .populate("project", "name")
-//         .populate("assignedTo", "name");
+//         .populate("manager", "name")
+//         .sort({ createdAt: -1 });
 //     }
-
-//     // EMPLOYEE 🔥
-//     else if (req.user.role === "EMPLOYEE") {
+//     /* MANAGER */
+//     else if (user.role === "MANAGER") {
 //       tasks = await Task.find({
-//         assignedTo: req.user.id
+//         project: user.project,
+//         isSubtask: false
 //       })
-//         .populate("manager", "name")
 //         .populate("project", "name")
-//         .populate("assignedTo", "name");
+//         .populate("manager", "name")
+//         .sort({ createdAt: -1 });
 //     }
+//     // Employee
+//     else if (user.role === "EMPLOYEE") {
 
-//     // SUPERADMIN
-//     else if (req.user.role === "SUPERADMIN") {
-//       tasks = await Task.find()
-//         .populate("manager", "name")
+//       tasks = await Task.find({
+//         assignedTo: { $in: [user.id] }
+//       })
 //         .populate("project", "name")
-//         .populate("assignedTo", "name");
+//         .populate("manager", "name")
+//         .populate("parentTask", "taskName")
+//         .sort({ createdAt: -1 });
 //     }
 
 //     res.json(tasks);
 
 //   } catch (err) {
-//     res.status(500).json({ message: err.message });
+//     console.log("GET TASK ERROR:", err);
+//     res.status(500).json({
+//       message: err.message
+//     });
 //   }
 // };
 
@@ -160,6 +211,7 @@ export const getManagerTasks = async (req, res) => {
     console.log("Logged In User:", req.user);
     const tasks = await Task.find({
       manager: managerId,
+      isSubtask: false,
     })
       .populate("project", "name")
       .populate("manager", "name");

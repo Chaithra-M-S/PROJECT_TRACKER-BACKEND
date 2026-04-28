@@ -11,8 +11,10 @@ import {
 const router = express.Router();
 
 router.post("/", verifyToken, createTask);
-router.get("/", verifyToken, getTasks);
 router.get("/my-tasks", verifyToken, getManagerTasks);
+
+router.get("/", verifyToken, getTasks);
+
 router.get("/:id", verifyToken, getTaskById);
 router.put("/:id", verifyToken, updateTaskStatus);
 
