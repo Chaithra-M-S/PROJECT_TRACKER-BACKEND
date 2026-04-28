@@ -5,7 +5,8 @@ import {
   getTasks,
   updateTaskStatus,
   getManagerTasks,
-  getTaskById
+  getTaskById,
+  getTasksByProject
 } from "../controllers/taskController.js";
 
 const router = express.Router();
@@ -14,6 +15,8 @@ router.post("/", verifyToken, createTask);
 router.get("/my-tasks", verifyToken, getManagerTasks);
 
 router.get("/", verifyToken, getTasks);
+router.get("/project/:projectId", getTasksByProject);
+
 
 router.get("/:id", verifyToken, getTaskById);
 router.put("/:id", verifyToken, updateTaskStatus);

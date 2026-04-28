@@ -41,6 +41,14 @@ const taskSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   }],
+  createdBy: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User"
+},
+
+createdRole: {
+  type: String
+},
 
   deadline: Date,
 
@@ -70,7 +78,17 @@ const taskSchema = new mongoose.Schema({
   remarks: {
     type: String,
     default: ""
+  },
+  messages: [
+  {
+    sender: String,
+    text: String,
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
   }
+]
 
 }, { timestamps: true });
 
