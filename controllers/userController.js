@@ -8,6 +8,7 @@ import { sendEmail } from "../utils/sendEmail.js";
 import Project from "../models/Project.js";
 
 
+
 export const createUser = async (req, res) => {
   try {
     console.log("🔥 BODY FROM FRONTEND:", req.body);

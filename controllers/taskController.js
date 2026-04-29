@@ -224,6 +224,7 @@ export const getManagerTasks = async (req, res) => {
 export const updateTaskStatus = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
+     console.log("Logged User:", req.user);
 
     if (req.body.status) {
       task.status = req.body.status;
@@ -231,8 +232,9 @@ export const updateTaskStatus = async (req, res) => {
 
     if (req.body.message) {
       task.messages.push({
-        sender: req.user.role,
+         sender: req.user.role,
         text: req.body.message,
+        createdAt: new Date()
       });
     }
 
