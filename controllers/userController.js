@@ -1,13 +1,8 @@
-
-
-
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import accountCreatedTemplate from "../templates/accountCreatedTemplate.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import Project from "../models/Project.js";
-
-
 
 export const createUser = async (req, res) => {
   try {
@@ -36,11 +31,7 @@ export const createUser = async (req, res) => {
     }
 
     // Validation
-    if (
-      role !== "PD" &&
-      role !== "SUPERADMIN" &&
-      !assignedProject
-    ) {
+    if (role !== "PD" && role !== "SUPERADMIN" && !assignedProject) {
       return res.status(400).json({
         message: "Project required for this role",
       });
@@ -52,7 +43,7 @@ export const createUser = async (req, res) => {
       password: hashedPassword,
       role,
       project: assignedProject,
-      createdBy: req.user?.id || null
+      createdBy: req.user?.id || null,
     });
 
     const message = accountCreatedTemplate(name, email, password);
@@ -62,38 +53,38 @@ export const createUser = async (req, res) => {
       message: "User created successfully",
       user,
     });
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-
 export const getUsers = async (req, res) => {
   try {
     let users;
 
-
     if (req.user.role === "SUPERADMIN") {
       users = await User.find({
-        _id: { $ne: req.user.id }   // 👈 exclude self
-      }).select("-password");
+        _id: { $ne: req.user.id }, // 👈 exclude self
+      })
+        .select("-password")
+
+        .populate("project", "name");
     }
 
     // ✅ Admin → only employees/managers
     else if (req.user.role === "ADMIN") {
       users = await User.find({
         project: req.user.project,
-        role: { $in: ["EMPLOYEE", "MANAGER"] }
-      }).select("-password");
-    }
-
-    else {
+        role: { $in: ["EMPLOYEE", "MANAGER"] },
+      })
+        .select("-password")
+        .populate("designation", "name")
+        .populate("project", "name");
+    } else {
       users = [];
     }
 
     res.json(users);
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -117,16 +108,14 @@ export const changePassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await User.findByIdAndUpdate(userId, {
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     res.json({ message: "Password updated successfully" });
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 export const getManagers = async (req, res) => {
   try {
@@ -134,33 +123,59 @@ export const getManagers = async (req, res) => {
 
     const managers = await User.find({
       role: "MANAGER",
-      project: projectId
+      project: projectId,
     });
 
     res.json(managers);
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-
 // get all users under that project (for manager dropdown in task creation)
-
-
 
 export const getUsersByProject = async (req, res) => {
   try {
+
     const users = await User.find({
       project: req.params.projectId,
-      role: "EMPLOYEE"
-    });
+      role: { $in: ["EMPLOYEE", "TEAMLEAD"] },
+    })
+    .populate("designation", "name");
 
     res.json(users);
 
   } catch (error) {
+
     console.log(error);
-    res.status(500).json(error);
+
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
 
+export const updateUser = async (req, res) => {
+  try {
+    // Handle password safely
+    if (req.body.password && req.body.password.trim() !== "") {
+      req.body.password = await bcrypt.hash(req.body.password, 10);
+    } else {
+      delete req.body.password;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    ).populate("designation");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

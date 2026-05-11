@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+
 // REGISTER
 export const register = async (req, res) => {
   try {
@@ -29,6 +30,7 @@ export const register = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -39,6 +41,7 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   console.log("HEADERS:", req.headers);
   console.log("BODY:", req.body);
+  console.log("JWT SECRET:", process.env.JWT_SECRET);
   try {
     const { email, password } = req.body;
 

@@ -36,11 +36,24 @@ const taskSchema = new mongoose.Schema({
     ref: "User"
   },
 
-  // old field keep optional
+  
   assignedTo: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   }],
+
+  assignedTeams: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Team",
+  },
+
+],
+teamLead: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "User",
+},
+
   createdBy: {
   type: mongoose.Schema.Types.ObjectId,
   ref: "User"
@@ -48,6 +61,10 @@ const taskSchema = new mongoose.Schema({
 
 createdRole: {
   type: String
+},
+teamLead: {
+   type: mongoose.Schema.Types.ObjectId,
+   ref: "User"
 },
 
   deadline: Date,
@@ -57,6 +74,7 @@ createdRole: {
     enum: ["High", "Medium", "Low"],
     default: "Medium"
   },
+  
 
   status: {
     type: String,
@@ -74,21 +92,14 @@ createdRole: {
     type: String,
     default: "0%"
   },
+  attachment: {
+  type: String,
+},
 
   remarks: {
     type: String,
     default: ""
   },
-  messages: [
-  {
-    sender: String,
-    text: String,
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }
-]
 
 }, { timestamps: true });
 

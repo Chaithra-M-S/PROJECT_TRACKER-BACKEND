@@ -16,13 +16,19 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["SUPERADMIN", "ADMIN", "PD", "MANAGER", "LEAD", "EMPLOYEE"],
+    enum: ["SUPERADMIN", "ADMIN", "PD", "MANAGER", "TEAMLEAD","EMPLOYEE"],
     default: "EMPLOYEE"
   },
-  project: {
+  project: [
+  {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Project"
+    ref: "Project",
   },
+],
+  designation: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Designation"
+},
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
